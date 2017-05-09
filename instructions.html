@@ -1,0 +1,351 @@
+---- Installing grunt and npm----
+
+1. sudo npm install -g grunt-cli
+
+2. create a gruntfile.js in the root of the project
+
+3. create package.json with npm init
+
+4. update the gruntfile.js
+
+
+module.exports = function(grunt){
+
+grunt.initConfig({
+
+//define what tasks consist of in this section
+
+//defining a task to concatonate all files from the components/scripts folder to the builds/development/js/scripts.js file. If scripts in the src folder need to be conatonated in a certain order, name each in the src array as a string one at a time in order.
+
+
+concat : {
+    dist: {
+        src: ['components/scripts/*.js'],
+        dest: 'builds/development/js/script.js'
+    }
+
+}
+
+
+}); // initConfig
+
+
+//grunt tasks are loaded in this section
+grunt.loadNpmTasks('grunt-contrib-concat');
+
+
+}; // wrapper function 
+
+
+
+5. Install the grunt as a pluggin
+    npm install grunt --save-dev
+
+6. install grunt-contrib-concat to run the workflow in step 4.
+
+npm install grunt-contrib-concat --save-dev
+
+7. Run the grunt command in the terminal to run our new task. This will concatonate the files as set up and place in the new folder
+
+grunt concat
+
+8. Adding options to a grunt task: The concat task takes an options object that can specify a separator as a string between files and a banner at the top of the file. 
+
+
+concat : {
+
+    options: {
+        separator: '---------separator----------',
+        banner: '-----------------banner--------'
+
+},
+    dist: {
+        src: ['components/scripts/*.js'],
+        dest: 'builds/development/js/script.js'
+    }
+
+}
+
+
+}); // initConfig
+
+
+//grunt tasks are loaded in this section
+grunt.loadNpmTasks('grunt-contrib-concat');
+
+
+}; // wrapper function 
+
+
+9. Chaining tasks: We can add a seperate subtask within concat and running grunt concat will perform each task in sequence. In the example below, adding a prod  task with a different output folder will also create a copy of the files in a production folder (the folder is actually created if it does not exist). Running grunt concat will run both tasks in sequence. Running grunt:dist or grunt:prod will only run the single task.
+
+concat: {
+            options: {
+                separator: '\n\n---------separator----------\n',
+                banner: '\n\n-----------------banner--------\n'
+
+            },
+            dist: {
+                src: ['components/scripts/*.js'],
+                dest: 'builds/development/js/script.js'
+            },
+            prod: {
+                src: ['components/scripts/*.js'],
+                dest: 'builds/production/js/script.js'
+            }
+
+        }
+
+
+10: Setting up a default task: We can run a set of default task by adding the following to the end of the grunt file just before the end of the wrapper function, 
+
+grunt.registerTask('default', ['name of task', 'another task'])
+
+
+
+
+
+
+
+
+------ Bower Integration ---------
+
+1. Installing bower CLI globally. Note may need to run sudo on mac:
+
+npm install -g bower
+
+2. Bower initialize - run and fill out questions - answers don't really matter
+
+bower init
+
+
+-------------Including script and HTML tags in index.html using grunt-wiredep ------------
+
+
+1. npm install --save-dev grunt-wiredep
+2. Update gruntfile.js to add task and load plugin
+
+Task:
+
+wiredep: {
+
+    task: {
+// location to read from (any file with html in this case)
+        src: 'builds/development/**/*.html'
+}
+
+}
+
+Plugin: grunt.loadNpmTasks('grunt-wiredep');
+
+3. Add to default tasks if required
+
+4. include the following comments in your index.html:
+
+In the head: 
+
+<!-- bower:css -->
+<!-- endbower -->
+
+Where scripts need to go:
+
+<!-- bower:js -->
+<!-- endbower -->
+
+
+5. Once the task is run all of the projects dependencies from bower are injected into the index.html "automagically" in the correct order
+
+
+--------- Bower concatination and including original files in builds------------
+
+grunt plugin: grunt-bower-concat combines bower dependencies and includes them in the builds folder for distribution later (vs having everything in bower_components only).
+
+1. install grunt-bower-concat
+
+npm install grunt-bower-concat --save-dev 
+
+2. load task in gruntfile.js
+
+grunt.loadNpmTasks('grunt-bower-concat');
+
+3. Create task in gruntfile.js. This task concatonates all bower file dependencies and places it in the folder/file configured in the task. In the index.html you just need to reference this file. All js goes in the dest, all css in the cssDest. Note the keys of the dest object are what types of files will be searched for and created
+
+  bower_concat: {
+            all: {
+                dest: {
+                    js: 'builds/development/js/_bower.js',
+                    css: 'builds/development/css/_bower.css'
+                },
+                include: [
+                    'bootstrap',
+                    'alpaca',
+                    'jquery'
+                    
+                ]
+            }
+
+        }
+
+
+
+
+
+
+
+----- Using bower installer to pull only relevant files out of the bower_components folder ----
+
+In the example below a lib folder is created in the root of the project and pulls out only the files listed in the bower.json dependencies and places it in the lib folder
+
+1. sudo npm install -g bower-installer
+2. Add the following key to the bower.json file
+
+"install" : {
+    "path": "libs"
+
+}
+
+3. run the following command:
+
+bower-installer
+
+
+
+
+
+
+
+------------- grunt-contrib-watch plugin --------------
+
+1. Allows for autorunning of grunt tasks when files change run:
+
+npm install grunt-contrib-watch --save-dev
+
+
+2. add to loaded scripts in gruntfile.js:
+
+grunt.loadNpmTasks('grunt-contrib-watch');
+
+3. in gruntfile.js add a task to tell the plugin what files to watch and then what tasks to run. The task looks like this:
+
+
+watch: {
+    options: {
+        // improves speed
+        spawn: false
+    },
+    scripts: {
+    // which files to watch (** = and folder, * - any file)
+    files: ['builds/development/**/*.html', 'components/scripts/**/*.js' ],
+    
+    //what tasks to run when change detected
+    tasks: ['concat', 'bower_concat']
+
+    }
+
+}
+
+
+4. add the 'watch' task to the default grunt task
+
+ grunt.registerTask('default', ['concat', 'bower_concat', 'wiredep', 'watch']);
+
+
+
+--------  Hot Reloading browser --------
+
+1. Hot reloading of browser via grunt-contrib-connect
+
+npm install grunt-contrib-connect --save-dev
+
+2. add loaded scripts in gruntfile.js
+
+grunt.loadNpmTasks('grunt-contrib-connect');
+
+3. Add a task to create a server and run the pluggin. Add a task to gruntfile.js
+
+connect: {
+    server: {
+        options: {
+
+            hostname: 'localhost',
+            port: 3000,
+            base: 'builds/development/',
+            livereload: true
+        }
+    }   
+}
+
+4. Add the connect task to the default grunt task
+
+grunt.registerTask('default', ['concat', 'bower_concat', 'wiredep', 'connect', 'watch']);
+
+5. update the watch task options to enable live reload
+
+
+watch: {
+    options: {
+        // improves speed
+        spawn: false,
+        livereload: true
+    }
+
+}
+
+
+
+
+------------ copy files using grunt contrib copy -- --
+
+
+The following code will copy font files from the bower_components folder to the build/dvelopment/font folder
+
+http://stackoverflow.com/questions/19232758/how-to-include-font-awesome-in-a-grunt-project
+
+
+ copy: {
+        libraries: {
+            files: [
+                {
+                    expand: true,
+                    cwd: 'bower_components/materialize/dist/fonts/',
+                    src: ['**/*'],
+                    dest: 'builds/development/fonts/'
+                }
+            ]
+        }
+    }
+
+grunt.registerTask('default', ['copy:libraries']);
+
+
+
+
+--------------- Sass support --------------
+install node-sass and grunt-sass
+
+
+1. npm install node-sass
+2. npm install --save-dev grunt-sass
+
+
+update the gruntfile.js with the following task
+
+note the style would be compressed for prod
+
+sass:{
+    dist:{
+        options:{
+            style: 'expanded' 
+        },
+        files: [{
+            src: 'components/sass/style.scss',
+            dest: 'builds/development/css/style.css'
+        }]
+
+}
+
+}
+
+
+ grunt.loadNpmTasks('grunt-sass');
+    grunt.registerTask('default', ['concat', 'bower_concat', 'sass', 'copy', 'wiredep', 'connect', 'watch']);    
